@@ -60,10 +60,19 @@ export async function initStore(): Promise<void> {
       for (const rule of missingBuiltin) await idbPut(STORE_RULES, rule)
     }
     store.projects = projects
+    // 旧版本数据迁移：补回贴核对台账字段
+    let migrated = false
+    for (const project of store.projects) {
+      if (!Array.isArray(project.reconciliations)) {
+        project.reconciliations = []
+        migrated = true
+      }
+    }
     sortProjects()
     const operator = meta.find((entry) => entry.key === 'operator')
     if (operator) store.operator = operator.value
     store.ready = true
+    if (migrated) for (const project of store.projects) await idbPut(STORE_PROJECTS, toRaw(project))
   } catch (error) {
     store.error = error instanceof Error ? error.message : String(error)
     store.ready = true
@@ -106,6 +115,7 @@ export async function createProject(input: {
     batches: input.batches.length > 0 ? input.batches : [],
     persons: [],
     imports: [],
+    reconciliations: [],
     createdAt: now,
     updatedAt: now
   }
@@ -160,6 +170,22 @@ export async function flushProject(project: Project): Promise<void> {
 export async function deleteProject(id: string): Promise<void> {
   store.projects = store.projects.filter((project) => project.id !== id)
   await idbDelete(STORE_PROJECTS, id)
+}
+
+/** 保存一份新差异单：插到台账最前（最近一份作为下次比对的手工改动基线），立即落盘 */
+export async function saveReconciliation(project: Project, reconciliation: import('./types').Reconciliation): Promise<void> {
+  project.reconciliations = project.reconciliations.filter((entry) => entry.id !== reconciliation.id)
+  project.reconciliations.unshift(reconciliation)
+  await flushProject(project)
+}
+
+export function getReconciliation(project: Project, reconciliationId: string) {
+  return project.reconciliations.find((entry) => entry.id === reconciliationId)
+}
+
+export async function deleteReconciliation(project: Project, reconciliationId: string): Promise<void> {
+  project.reconciliations = project.reconciliations.filter((entry) => entry.id !== reconciliationId)
+  await flushProject(project)
 }
 
 export async function saveRule(rule: SizeRule): Promise<void> {

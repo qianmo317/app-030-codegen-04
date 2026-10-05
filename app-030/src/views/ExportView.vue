@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { ensureMerged, flushProject, getProject, getRule, store } from '../logic/store'
 import { buildSummary, conservationText } from '../logic/merge'
 import {
+  buildDetailSnapshot,
   buildOrderSheet,
   detailRows,
   detailWorkbookSheets,
@@ -82,6 +83,9 @@ async function exportDetailXlsx(): Promise<void> {
   if (!ctx || !(await prepare())) return
   const sheets = detailWorkbookSheets(ctx)
   const fileName = exportBaseName(ctx, '量体明细与特殊体型清单', 'xlsx')
+  // 记录发出核对时的字段快照：回表回来后据此识别库里手工改过的值（冲突检测）
+  ctx.project.detailSnapshot = { ...buildDetailSnapshot(ctx, fileName), operator: store.operator }
+  await flushProject(ctx.project)
   downloadBlob(buildXlsxBlob(sheets), fileName)
   notify(`已导出量体明细（含号型结果，共 ${project.value?.persons.length ?? 0} 行）与特殊体型清单 → ${fileName}`)
 }
@@ -91,6 +95,8 @@ async function exportDetailCsv(): Promise<void> {
   if (!ctx || !(await prepare())) return
   const rows = detailRows(ctx)
   const fileName = exportBaseName(ctx, '量体明细', 'csv')
+  ctx.project.detailSnapshot = { ...buildDetailSnapshot(ctx, fileName), operator: store.operator }
+  await flushProject(ctx.project)
   downloadText(toCsvText(rows), fileName)
   notify(`已导出量体明细（CSV，${rows.length - 1} 条记录，可直接回贴给学校核对）→ ${fileName}`)
 }

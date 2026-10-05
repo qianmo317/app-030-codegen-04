@@ -69,6 +69,7 @@ export type SummaryTotals = {
   totalRows: number
   invalidRows: number
   duplicateRows: number
+  removedRows: number
   validRows: number
   regularQty: number
   specialQty: number
@@ -167,6 +168,7 @@ export function buildSummary(project: Project, rule: SizeRule): Summary {
 
   let invalidRows = 0
   let duplicateRows = 0
+  let removedRows = 0
   let validRows = 0
   let overrideCount = 0
   let pendingConfirmCount = 0
@@ -176,6 +178,7 @@ export function buildSummary(project: Project, rule: SizeRule): Summary {
   for (const person of project.persons) {
     if (person.status === 'invalid') invalidRows += 1
     else if (person.status === 'duplicate') duplicateRows += 1
+    else if (person.status === 'removed') removedRows += 1
     else validRows += 1
 
     const orgKey = person.orgUnit || '未填班级/车间'
@@ -283,6 +286,7 @@ export function buildSummary(project: Project, rule: SizeRule): Summary {
       totalRows: project.persons.length,
       invalidRows,
       duplicateRows,
+      removedRows,
       validRows,
       regularQty,
       specialQty,
@@ -303,5 +307,5 @@ export function buildSummary(project: Project, rule: SizeRule): Summary {
 /** 守恒等式文本（页面与导出共用，保证逐行一致） */
 export function conservationText(summary: Summary): string {
   const { totals } = summary
-  return `常规 ${totals.regularQty} + 特殊 ${totals.specialQty} = 有效 ${totals.validRows} / 总录入 ${totals.totalRows}`
+  return `常规 ${totals.regularQty} + 特殊 ${totals.specialQty} = 有效 ${totals.validRows} / 总录入 ${totals.totalRows}（无效 ${totals.invalidRows} · 重复 ${totals.duplicateRows} · 回表删除 ${totals.removedRows}）`
 }

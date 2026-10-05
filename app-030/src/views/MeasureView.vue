@@ -7,7 +7,7 @@ import { estimateInitialSize, type EstimateResult } from '../logic/estimate'
 import { formatCm, parseLengthCm, parseWeightKg } from '../logic/precision'
 import { downloadText, toCsvText } from '../logic/csv'
 import { runMerge } from '../logic/merge'
-import { detailRows } from '../logic/exporter'
+import { buildDetailSnapshot, detailRows } from '../logic/exporter'
 import type { Gender, Person } from '../logic/types'
 
 const route = useRoute()
@@ -197,12 +197,13 @@ async function exportFallbackCsv(): Promise<void> {
   if (!current) return
   runMerge(current, rule.value)
   await flushProject(current)
-  const rows = detailRows({ project: current, rule: rule.value })
-  downloadText(
-    toCsvText(rows),
-    `${current.name.replace(/[\\/:*?"<>|\s]/g, '_')}-量体明细-离线兜底.csv`
-  )
-  notice.value = '已导出本地 CSV（兜底），可直接交给办公室汇总'
+  const ctx = { project: current, rule: rule.value }
+  const fileName = `${current.name.replace(/[\\/:*?"<>|\s]/g, '_')}-量体明细-离线兜底.csv`
+  current.detailSnapshot = { ...buildDetailSnapshot(ctx, fileName), operator: store.operator }
+  const rows = detailRows(ctx)
+  await flushProject(current)
+  downloadText(toCsvText(rows), fileName)
+  notice.value = '已导出本地 CSV（兜底），可直接交给办公室汇总；本次导出值已记录为回贴核对基线'
 }
 
 function focusHeight(): void {

@@ -83,7 +83,8 @@ function exportStockAdvice(): void {
         </div>
         <p class="hint" style="margin-top: 8px">
           等式说明：有效人数 = 总录入 {{ summary.totals.totalRows }} − 无效行 {{ summary.totals.invalidRows }} − 重复行
-          {{ summary.totals.duplicateRows }} = <b>{{ summary.totals.validRows }}</b>；常规档 {{ summary.totals.regularQty }} +
+          {{ summary.totals.duplicateRows }} − 回表删除 {{ summary.totals.removedRows }} = <b>{{ summary.totals.validRows }}</b
+          >；常规档 {{ summary.totals.regularQty }} +
           特殊单列 {{ summary.totals.specialQty }} = <b>{{ summary.totals.accountedQty }}</b>
         </p>
 
@@ -126,6 +127,7 @@ function exportStockAdvice(): void {
           <div class="stat"><div class="stat-label">总套数（常规+特殊）</div><div class="stat-value">{{ totalQty }}</div></div>
           <div class="stat"><div class="stat-label">无效行</div><div class="stat-value">{{ summary.totals.invalidRows }}</div></div>
           <div class="stat"><div class="stat-label">重复行</div><div class="stat-value">{{ summary.totals.duplicateRows }}</div></div>
+          <div class="stat"><div class="stat-label">回表删除</div><div class="stat-value">{{ summary.totals.removedRows }}</div></div>
           <div class="stat"><div class="stat-label">按规则归并</div><div class="stat-value">{{ summary.totals.ruleResolvedCount }}</div></div>
           <div class="stat"><div class="stat-label">人工覆写</div><div class="stat-value">{{ summary.totals.overrideCount }}</div></div>
           <div class="stat"><div class="stat-label">特殊单列</div><div class="stat-value">{{ summary.totals.specialQty }}</div></div>

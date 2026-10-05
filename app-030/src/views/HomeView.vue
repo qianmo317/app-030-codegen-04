@@ -27,14 +27,17 @@ function projectStats(project: Project) {
   let active = 0
   let invalid = 0
   let duplicate = 0
+  let removed = 0
   let special = 0
   for (const person of project.persons) {
     if (person.status === 'active') active += 1
     else if (person.status === 'invalid') invalid += 1
-    else duplicate += 1
+    else if (person.status === 'duplicate') duplicate += 1
+    else if (person.status === 'removed') removed += 1
     if (person.specialFlag && person.status === 'active') special += 1
   }
-  return { total: project.persons.length, active, invalid, duplicate, special }
+  const pendingReconcile = project.reconciliations?.[0]?.counts.pending ?? 0
+  return { total: project.persons.length, active, invalid, duplicate, removed, special, pendingReconcile }
 }
 
 const projects = computed(() => store.projects)
@@ -147,7 +150,9 @@ function formatTime(value: number): string {
               <th class="num">有效</th>
               <th class="num">无效</th>
               <th class="num">重复</th>
+              <th class="num">回表删除</th>
               <th class="num">特殊</th>
+              <th class="num">待核对</th>
               <th>更新时间</th>
               <th>操作</th>
             </tr>
@@ -162,12 +167,20 @@ function formatTime(value: number): string {
               <td class="num">{{ projectStats(project).active }}</td>
               <td class="num">{{ projectStats(project).invalid }}</td>
               <td class="num">{{ projectStats(project).duplicate }}</td>
+              <td class="num">{{ projectStats(project).removed }}</td>
               <td class="num">{{ projectStats(project).special }}</td>
+              <td class="num">
+                <span v-if="projectStats(project).pendingReconcile > 0" class="badge badge-warn">
+                  {{ projectStats(project).pendingReconcile }}
+                </span>
+                <span v-else>—</span>
+              </td>
               <td>{{ formatTime(project.updatedAt) }}</td>
               <td>
                 <div class="toolbar">
                   <RouterLink class="btn btn-sm" :to="`/measure/${project.id}`">录入</RouterLink>
                   <RouterLink class="btn btn-sm" :to="`/import/${project.id}`">导入</RouterLink>
+                  <RouterLink class="btn btn-sm" :to="`/reconcile/${project.id}`">回贴核对</RouterLink>
                   <RouterLink class="btn btn-sm" :to="`/merge/${project.id}`">归并</RouterLink>
                   <RouterLink class="btn btn-sm" :to="`/summary/${project.id}`">汇总</RouterLink>
                   <RouterLink class="btn btn-sm btn-primary" :to="`/export/${project.id}`">导出</RouterLink>

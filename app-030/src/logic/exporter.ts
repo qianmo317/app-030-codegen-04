@@ -2,7 +2,7 @@
  * 导出：下单汇总表 / 量体明细 / 特殊体型清单 / 备货建议。
  * 页面预览、CSV、XLSX 与打印预览共用同一份数据，保证逐行一致。
  */
-import type { Gender, Person, Project, SizeRule, SummaryRow } from './types'
+import type { Gender, Person, Project, SizeRule, SummaryRow, DetailSnapshot, ReconcileFieldKey, ReconcileValue } from './types'
 import { specialFlagLabel } from './sizeRules'
 import { conservationText, type Summary } from './merge'
 import { chestWaistDiffCm, formatCm } from './precision'
@@ -26,6 +26,7 @@ export function genderLabel(gender: Gender): string {
 export function personStatusLabel(person: Person): string {
   if (person.status === 'invalid') return '无效行'
   if (person.status === 'duplicate') return '重复行（已排除）'
+  if (person.status === 'removed') return '回表删除（已排除）'
   return '有效'
 }
 
@@ -90,7 +91,7 @@ export function buildOrderSheet(ctx: ExportContext): OrderSheet {
       { label: '生成时间', value: ctx.generatedAt.toLocaleString('zh-CN') },
       { label: '录入/导出人', value: ctx.operator || '—' },
       { label: '守恒校验', value: `${conservationText(summary)} → ${summary.conserved ? '通过' : '不通过'}` },
-      { label: '总录入 / 无效 / 重复 / 有效', value: `${summary.totals.totalRows} / ${summary.totals.invalidRows} / ${summary.totals.duplicateRows} / ${summary.totals.validRows}` }
+      { label: '总录入 / 无效 / 重复 / 回表删除 / 有效', value: `${summary.totals.totalRows} / ${summary.totals.invalidRows} / ${summary.totals.duplicateRows} / ${summary.totals.removedRows} / ${summary.totals.validRows}` }
     ],
     items,
     totalQty: summary.totals.accountedQty,
@@ -171,6 +172,40 @@ export function detailRows(ctx: BaseContext): (string | number)[][] {
     ])
   }
   return rows
+}
+
+/* ------------------------------- 回贴基线快照 ------------------------------- */
+
+const RECONCILE_SNAPSHOT_FIELDS: ReconcileFieldKey[] = [
+  'heightCm',
+  'weightKg',
+  'chestCm',
+  'waistCm',
+  'gender',
+  'orgUnit',
+  'batch'
+]
+
+/**
+ * 导出量体明细给学校核对时，对七个比对字段拍快照（按 姓名|班级 键）。
+ * 回表回来后若库里当前值与快照不同，说明明细发出后库里被手工改过——
+ * 此时回表值若又不同，即为「回表值与库里手工改过的值冲突」。
+ */
+export function buildDetailSnapshot(ctx: BaseContext, fileName: string): DetailSnapshot {
+  const values: DetailSnapshot['values'] = {}
+  for (const person of ctx.project.persons) {
+    const key = `${person.name.trim()}|${person.orgUnit.trim()}`
+    const entry = {} as Record<ReconcileFieldKey, ReconcileValue>
+    for (const field of RECONCILE_SNAPSHOT_FIELDS) {
+      if (field === 'gender') entry[field] = person.gender
+      else if (field === 'orgUnit') entry[field] = person.orgUnit
+      else if (field === 'batch') entry[field] = person.batch
+      else if (field === 'weightKg') entry[field] = person.weightKg
+      else entry[field] = person[field] > 0 ? person[field] : null
+    }
+    values[key] = entry
+  }
+  return { at: Date.now(), fileName, operator: '', values }
 }
 
 /* ------------------------------- 特殊体型清单 ------------------------------- */

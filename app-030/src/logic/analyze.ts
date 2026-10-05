@@ -17,7 +17,7 @@ export type PersonDraft = {
   specialFlag: string | null
   note: string
   sourceRow: number | null
-  source: 'manual' | 'import'
+  source: 'manual' | 'import' | 'reconcile'
 }
 
 export type AnalyzeOutcome = {

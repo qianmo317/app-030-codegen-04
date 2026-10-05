@@ -632,7 +632,7 @@ const rowLabel = (sizeCode: string, isSpecial: boolean): string =>
               </td>
               <td>
                 <span class="badge" :class="person.status === 'active' ? 'badge-ok' : 'badge-danger'">
-                  {{ person.status === 'active' ? '有效' : person.status === 'invalid' ? '无效' : '重复' }}
+                  {{ person.status === 'active' ? '有效' : person.status === 'invalid' ? '无效' : person.status === 'duplicate' ? '重复' : '回表删除' }}
                 </span>
                 <span v-if="person.specialFlag" class="badge badge-warn" style="margin-left: 4px">
                   {{ specialFlagLabel(rule, person.specialFlag) }}
