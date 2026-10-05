@@ -25,6 +25,7 @@ const tabs = computed(() => {
   return [
     { to: `/measure/${projectId.value}`, label: '量体录入' },
     { to: `/import/${projectId.value}`, label: '批量导入' },
+    { to: `/recon/${projectId.value}`, label: '回贴核对' },
     { to: `/merge/${projectId.value}`, label: '归并结果' },
     { to: `/summary/${projectId.value}`, label: '汇总与守恒' },
     { to: `/export/${projectId.value}`, label: '导出下单表' }

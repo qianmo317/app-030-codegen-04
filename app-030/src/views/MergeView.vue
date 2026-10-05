@@ -637,6 +637,14 @@ const rowLabel = (sizeCode: string, isSpecial: boolean): string =>
                 <span v-if="person.specialFlag" class="badge badge-warn" style="margin-left: 4px">
                   {{ specialFlagLabel(rule, person.specialFlag) }}
                 </span>
+                <span
+                  v-if="person.reconMark"
+                  class="badge badge-info"
+                  style="margin-left: 4px"
+                  :title="`回贴核对「${person.reconMark.fileName}」${person.reconMark.action === 'added' ? '新增入库' : person.reconMark.action === 'removed' ? '移出有效人数' : '采纳修改'}：${new Date(person.reconMark.at).toLocaleString('zh-CN')}`"
+                >
+                  核对采纳
+                </span>
               </td>
               <td>
                 <div class="toolbar">

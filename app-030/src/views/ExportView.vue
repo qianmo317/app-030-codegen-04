@@ -193,6 +193,7 @@ const genderText = (gender: string): string => (gender === 'male' ? '男' : '女
           <div class="spacer"></div>
           <button class="btn" type="button" @click="exportDetailXlsx">量体明细（Excel）</button>
           <button class="btn" type="button" @click="exportDetailCsv">量体明细（CSV，可回贴核对）</button>
+          <RouterLink class="btn" :to="`/recon/${project.id}`">学校改回后 → 回贴核对</RouterLink>
           <button class="btn" type="button" @click="exportSpecialCsv">特殊体型清单（CSV）</button>
           <button class="btn" type="button" @click="exportStockCsv">号型分布与备货建议（CSV）</button>
         </div>

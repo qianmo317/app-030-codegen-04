@@ -60,6 +60,10 @@ export async function initStore(): Promise<void> {
       for (const rule of missingBuiltin) await idbPut(STORE_RULES, rule)
     }
     store.projects = projects
+    for (const project of store.projects) {
+      // 旧版本数据没有回贴核对字段，读取时归一化
+      if (!Array.isArray(project.reconciliations)) project.reconciliations = []
+    }
     sortProjects()
     const operator = meta.find((entry) => entry.key === 'operator')
     if (operator) store.operator = operator.value
@@ -106,6 +110,7 @@ export async function createProject(input: {
     batches: input.batches.length > 0 ? input.batches : [],
     persons: [],
     imports: [],
+    reconciliations: [],
     createdAt: now,
     updatedAt: now
   }
